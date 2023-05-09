@@ -1,0 +1,61 @@
+<resources>
+    <string name="app_name">IntroduccionKotlin</string>
+    <string name="an_ocurred_while_loading_data">Ocurrio un error en la carga de datos</string>
+    <string name="empty_list">Lista vacia, intenta agregar paises a la lista</string>
+
+    <!-- Bottom Navigation -->
+    <string name="menu_home">Home</string>
+    <string name="menu_agenda">Agenda</string>
+    <string name="menu_user">Usuario</string>
+    <string name="detail">Detalle</string>
+    <string name="buscar_empresa">Buscar empresa</string>
+
+    <!-- Messages Add and Remove Country -->
+    <string name="country_add_success">El país fue agregado exitosamente</string>
+    <string name="country_add_error">Tenemos un problema, intentar más tarde</string>
+    <string name="country_add_exists">El país ya existe en tu lista</string>
+    <string name="country_remove_error">Tenemos un problema, intente más tarde</string>
+
+    <!-- Splash Screen -->
+    <string name="title_splash_screen">Flag App</string>
+
+    <!-- Preference -->
+    <string name="prefs_user">PREFERENCE_USER</string>
+
+    <!-- LogIn -->
+    <string name="toolbar_login">Iniciar Sesión</string>
+    <string name="btn_login">Ingresar</string>
+    <string name="btn_register">Registrarse</string>
+    <string name="sanckbar_uncomplete_credentials">Todos los campos son requeridos</string>
+    <string name="sanckbar_error_login">Tuvimos un pronlema, no pudimos iniciar sesión</string>
+    <string name="sanckbar_error_user">Tuvimos un pronlema, no pudimos cargar el usuario</string>
+    <string name="sanckbar_error_register">Tuvimos un pronlema, no pudimos registrarte</string>
+    <string name="sanckbar_register_ok">Fuiste registrado con exito</string>
+    <string name="sanckbar_password_ok">Fue guardada de forma exitosa tu contraseña</string>
+    <string name="sanckbar_password_error">Tuvimos un problema no pudimos cambiar tu contraseña</string>
+    <string name="sanckbar_update_country">No pudimos actualizar tu country</string>
+
+    <!-- Register -->
+    <string name="toolbar_register">Registrate</string>
+    <string name="btn_save">Guardar</string>
+    <string name="input_phone_hint">Teléfono</string>
+    <string name="input_name_hint">Nombre</string>
+    <string name="input_email_hint">Email</string>
+    <string name="input_password_hint">Password</string>
+    <string name="input_birthday_hint">Fecha de nacimiento</string>
+    <string name="input_gender_hint">Genero</string>
+
+    <!-- User -->
+    <string name="btn_logout">Cerrar sesión</string>
+    <string name="btn_edit">Editar</string>
+
+    <!-- Description Country -->
+    <string name="country_name_title">Nombre</string>
+    <string name="country_capital_title">Capital</string>
+    <string name="country_population_title">Población</string>
+    <string name="country_region_title">Región</string>
+    <string name="country_description_title">Descripción</string>
+    <string name="input_description_hint">Descripción</string>
+
+
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.introduccionkotlin.ui.home.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/countriesScheduledFragment"
+        android:name="com.example.introduccionkotlin.ui.scheduled.CountriesScheduledFragment"
+        android:label="@string/menu_agenda"
+        tools:layout="@layout/fragment_countries_list_schedules" />
+
+    <fragment
+        android:id="@+id/userDetailFragment"
+        android:name="com.example.introduccionkotlin.ui.user.UserDetailFragment"
+        android:label="@string/menu_user"
+        tools:layout="@layout/fragment_user_detail" >
+    </fragment>
+
+</navigation>
