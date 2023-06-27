@@ -30,11 +30,8 @@ class UserDetailFragment : Fragment() {
     private val user = FirebaseAuth.getInstance().currentUser
     private var email = ""
     private var password = ""
+    private var btnSaveSelected = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?) : View? {
@@ -84,6 +81,7 @@ class UserDetailFragment : Fragment() {
                         etMail.text.toString(), etPassword.text.toString(),
                         etCellphone.text.toString(), etDate.text.toString())
                     )
+                    btnSaveSelected = true
                 } else {
                     Snackbar.make(
                         binding.root,
@@ -116,10 +114,24 @@ class UserDetailFragment : Fragment() {
         when (model) {
             is UserViewModel.UserUIState.Success -> {
                 model.user.let {
-                    if(it == null)
-                         Snackbar.make(binding.root, resources.getString(R.string.sanckbar_error_user), Snackbar.LENGTH_SHORT).show()
-                    else
-                        Snackbar.make(binding.root, resources.getString(R.string.sanckbar_data_user_save), Snackbar.LENGTH_SHORT).show()
+                    if(it == null) {
+                        if (btnSaveSelected)
+                            btnSaveSelected = false
+                        Snackbar.make(
+                            binding.root,
+                            resources.getString(R.string.sanckbar_error_user),
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        if (btnSaveSelected) {
+                            btnSaveSelected = false
+                            Snackbar.make(
+                                binding.root,
+                                resources.getString(R.string.sanckbar_data_user_save),
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                     setUpView(it)
                 }
             }

@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ProgressBar
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +34,7 @@ class LogInActivity : AppCompatActivity() , LogInFragment.OnLogInFragmentListene
     private val viewModel: UserViewModel by viewModels()
     private var auth: FirebaseAuth? = null
     private var userSelected: User? = null
+    private var logIn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +53,22 @@ class LogInActivity : AppCompatActivity() , LogInFragment.OnLogInFragmentListene
         // Agregar listener para cambiar el título del Toolbar
         navController.addOnDestinationChangedListener { _, destination, _ ->
             supportActionBar?.title = destination.label
+            supportActionBar?.setDisplayShowHomeEnabled(true)
         }
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when (navController.currentDestination?.id) {
+                    R.id.logInFragment -> {
+                        finish()
+                    }
+                    else -> {
+                        navController.navigate(R.id.logInFragment)
+                    }
+                }
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, callback)
 
         setUpObservers()
     }
@@ -108,8 +126,9 @@ class LogInActivity : AppCompatActivity() , LogInFragment.OnLogInFragmentListene
     @SuppressLint("CommitPrefEdits")
     override fun goMain (user : FirebaseUser?) {
         if(user != null){
+            logIn = true
             val intent = Intent(this, MainActivity::class.java)
-            startActivityForResult(intent, GO_MAIN_ACTIVITY)
+            activityResultLauncher.launch(intent)
         }
     }
 
@@ -117,26 +136,15 @@ class LogInActivity : AppCompatActivity() , LogInFragment.OnLogInFragmentListene
         super.onStart()
         auth.let{
             val currentUser = it?.currentUser
-            if(currentUser != null)
+            if(currentUser != null && !logIn)
                 goMain(currentUser)
         }
     }
 
-    override fun onBackPressed() {
-        when (navController.currentDestination?.id) {
-            R.id.logInFragment -> {
-                finish()
-            }
-            else -> {
-                super.onBackPressed()
-            }
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if(resultCode == RESULT_FIRST_USER){
+    private val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_FIRST_USER) {
             auth?.signOut()
+            logIn = false
             navController.navigate(R.id.logInFragment)
         }
     }
@@ -144,7 +152,6 @@ class LogInActivity : AppCompatActivity() , LogInFragment.OnLogInFragmentListene
     companion object{
         const val KEY_EMAIL = "email"
         const val KEY_PASSWORD = "password"
-        const val GO_MAIN_ACTIVITY = 1012
     }
 
 }

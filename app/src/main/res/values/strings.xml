@@ -44,6 +44,7 @@
     <!-- Register -->
     <string name="toolbar_register">Registrate</string>
     <string name="btn_save">Guardar</string>
+    <string name="btn_map">Ver en Mapa</string>
     <string name="input_phone_hint">Teléfono</string>
     <string name="input_name_hint">Nombre</string>
     <string name="input_email_hint">Email</string>

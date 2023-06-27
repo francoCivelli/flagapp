@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ProgressBar
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.introduccionkotlin.databinding.ActivitySplashScreenBinding
@@ -38,16 +39,11 @@ class SplashScreenActivity : AppCompatActivity()  {
         lifecycleScope.launch {
             delay(3000)
             val intent = Intent(this@SplashScreenActivity, LogInActivity::class.java)
-            startActivityForResult(intent, GO_LOGIN)
+            activityResultLauncher.launch(intent)
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+    private val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         finish()
-    }
-
-    companion object{
-        const val GO_LOGIN = 1001
     }
 }

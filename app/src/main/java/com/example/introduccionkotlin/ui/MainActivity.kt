@@ -3,6 +3,8 @@ package com.example.introduccionkotlin.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -42,17 +44,20 @@ class MainActivity : AppCompatActivity(), UserDetailFragment.OnRegisterFragmentL
         }
 
         NavigationUI.setupWithNavController(binding.bottomBar, navHostFragment.navController)
-    }
 
-    override fun onBackPressed() {
-        when (navController.currentDestination?.id) {
-            R.id.homeFragment -> {
-                goLogout()
-            }
-            else -> {
-                super.onBackPressed()
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when (navController.currentDestination?.id) {
+                    R.id.homeFragment -> {
+                        goLogout()
+                    }
+                    else -> {
+                        navController.navigate(R.id.homeFragment)
+                    }
+                }
             }
         }
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     override fun goLogout() {
@@ -74,16 +79,15 @@ class MainActivity : AppCompatActivity(), UserDetailFragment.OnRegisterFragmentL
     override fun goDetail(countryName: String) {
         val intent = Intent(this, CountryDetailActivity::class.java)
         intent.putExtra(COUNTRY_NAME, countryName)
-        startActivityForResult(intent, GO_DETAIL)
+        activityResultLauncher.launch(intent)
     }
 
     override fun goDetail(country: Country) {
         val intent = Intent(this, CountryDetailActivity::class.java)
         intent.putExtra(COUNTRY, country)
-        startActivityForResult(intent, GO_DETAIL)
+        activityResultLauncher.launch(intent)
     }
 
-    companion object{
-        const val GO_DETAIL = 1015
+    private val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
     }
 }

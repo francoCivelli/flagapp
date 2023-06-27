@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.introduccionkotlin.R
 import com.example.introduccionkotlin.databinding.FragmentCountryMapBinding
 import com.example.introduccionkotlin.model.Country
+import com.example.introduccionkotlin.ui.detail.CountryDetailActivity.Companion.COUNTRY
 import com.example.introduccionkotlin.ui.home.ListViewModel
 import com.example.introduccionkotlin.ui.login.LogInActivity
 import com.example.introduccionkotlin.util.SearchHelper
@@ -39,14 +40,17 @@ class CountryMapFragment : Fragment(), OnMapReadyCallback {
 
     private lateinit var database: FirebaseDatabase
     private var email: String = ""
+    private var country: Country? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(requireContext())
         database = FirebaseDatabase.getInstance()
-        // Obtener instancia de SharedPreferences
+
+        arguments?.let{
+            country = it.getSerializable(COUNTRY) as? Country?
+        }
         val sharedPreferences = requireContext().getSharedPreferences(getString(R.string.prefs_user), Context.MODE_PRIVATE)
-        // Obtener valor de preferencia
         email = sharedPreferences?.getString(LogInActivity.KEY_EMAIL, "").toString()
     }
 
@@ -135,31 +139,39 @@ class CountryMapFragment : Fragment(), OnMapReadyCallback {
         binding.mapView.onLowMemory()
     }
 
+    private fun markCountryInMap (country: Country) {
+        if(country.latlng.size == 2) {
+            val latLng = LatLng(country.latlng[0], country.latlng[1])
+            // Lo marca en el mapa
+            googleMap.addMarker(MarkerOptions().position(latLng).title(country.countryName))
+            // Centra el mapa al pais
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5f))
+        }
+    }
+
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
 
         googleMap.uiSettings.isZoomControlsEnabled = true
 
-        val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
-        reference.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                for (childSnapshot in dataSnapshot.children) {
-                    val countryJson = childSnapshot.getValue(String::class.java)
-                    val copyCountry = Gson().fromJson(countryJson, Country::class.java)
-                    if (copyCountry != null) {
-                        if(copyCountry.latlng.size == 2) {
-                            val latLng = LatLng(copyCountry.latlng[0], copyCountry.latlng[1])
-                            // Lo marca en el mapa
-                            googleMap.addMarker(MarkerOptions().position(latLng).title(copyCountry.countryName))
-                            // Centra el mapa al pais
-                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10f))
+        if(country != null){
+            markCountryInMap(country!!)
+        } else {
+            val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
+            reference.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    for (childSnapshot in dataSnapshot.children) {
+                        val countryJson = childSnapshot.getValue(String::class.java)
+                        val copyCountry = Gson().fromJson(countryJson, Country::class.java)
+                        if (copyCountry != null) {
+                            markCountryInMap(copyCountry)
                         }
                     }
                 }
-            }
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Manejo de errores
-            }
-        })
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Manejo de errores
+                }
+            })
+        }
     }
 }

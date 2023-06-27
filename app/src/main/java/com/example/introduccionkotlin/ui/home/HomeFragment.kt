@@ -20,15 +20,11 @@ import com.example.introduccionkotlin.ui.login.LogInActivity
 import com.example.introduccionkotlin.util.SearchHelper
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseApp
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.layout_card_buscador.view.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import com.google.gson.Gson
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
@@ -47,9 +43,7 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(requireContext())
         database = FirebaseDatabase.getInstance()
-        // Obtener instancia de SharedPreferences
         val sharedPreferences = requireContext().getSharedPreferences(getString(R.string.prefs_user), Context.MODE_PRIVATE)
-        // Obtener valor de preferencia
         email = sharedPreferences?.getString(LogInActivity.KEY_EMAIL, "").toString()
     }
 
@@ -74,6 +68,11 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
         setUpSearchView()
 
         return binding.root
+    }
+
+    override fun onStart() {
+        super.onStart()
+        cleanSearchText()
     }
 
     private fun setUpObservers () {
@@ -157,6 +156,11 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
                 }
                 binding.loadingView.visibility = View.GONE
             }
+            is ListViewModel.CountryUIState.UpdateList -> {
+                model.countries?.let { countries ->
+                    countriesAdapter.updateCountries(countries)
+                }
+            }
             is ListViewModel.CountryUIState.Exists -> {
                 model.exists.let {
                     if(it) {
@@ -170,7 +174,18 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
                 }
 
             }
+            is ListViewModel.CountryUIState.Delete -> {
+                countries.clear()
+                countries.addAll(viewModel.countries)
+                countriesAdapter.updateCountry(countrySelected!!)
+                countrySelected = null
+            }
             is ListViewModel.CountryUIState.Add -> {
+                if(countrySelected?.selectedMap == true){
+                    countries.clear()
+                    countries.addAll(viewModel.countries)
+                    countriesAdapter.updateCountry(countrySelected!!)
+                }
                 countrySelected = null
                 Snackbar.make(binding.root, resources.getString(R.string.country_add_success), Snackbar.LENGTH_SHORT).show()
             }
@@ -208,76 +223,19 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
     }
 
     private fun checkCountriesScheduled () {
-        val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
-        reference.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                for (country in countries) {
-                    val existe = dataSnapshot.children.any {
-                        val countryJson = it.getValue(String::class.java)
-                        val copyCountry = Gson().fromJson(countryJson, Country::class.java)
-                        copyCountry.countryName == country.countryName
-                    }
-                    if(existe)
-                        country.selectedMap = true
-                }
-                countriesAdapter.updateCountries(countries)
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Manejo de errores
-            }
-        })
+        viewModel.checkCountriesScheduled(database, email)
     }
 
     override fun addCountryMap(country: Country) {
-        val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
-        reference.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val existe = dataSnapshot.children.any {
-                    val countryJson = it.getValue(String::class.java)
-                    val copyCountry = Gson().fromJson(countryJson, Country::class.java)
-                    copyCountry.countryName == country.countryName
-                }
-                if (!existe) {
-                    val copyCountry = viewModel.generateCountryId(country)
-                    val countryJson = Gson().toJson(copyCountry)
-                    reference.child(copyCountry?.countryName?:"").setValue(countryJson)
-                    countries.find { copyCountry?.countryName == it.countryName }?.selectedMap = true
-                    countriesAdapter.updateCountries(countries)
-                }
-            }
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Manejo de errores
-            }
-        })
+        countrySelected = country
+        countrySelected?.selectedMap = true
+        viewModel.addCountryMap(country, database, email)
     }
 
     override fun removeCountryMap(country: Country) {
-        val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
-        val countryCopy = viewModel.generateCountryId(country)
-        if(countryCopy != null) {
-            val query = reference.child(countryCopy.countryName?:"")
-            query.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    val countryJson = dataSnapshot.getValue(String::class.java)
-                    val copyCountry = Gson().fromJson(countryJson, Country::class.java)
-                    if (copyCountry != null) {
-                        dataSnapshot.ref.removeValue()
-                            .addOnSuccessListener {
-                                Snackbar.make(binding.root, resources.getString(R.string.sanckbar_country_remove), Snackbar.LENGTH_SHORT).show()
-                                countries.find { country.countryName == it.countryName }?.selectedMap = false
-                                countriesAdapter.updateCountries(countries)
-                            }
-                            .addOnFailureListener {
-                                Snackbar.make(binding.root, resources.getString(R.string.sanckbar_country_remove_error), Snackbar.LENGTH_SHORT).show()
-                            }
-                    }
-                }
-                override fun onCancelled(databaseError: DatabaseError) {
-                    // Ocurrió un error al realizar la consulta
-                }
-            })
-        }
+        countrySelected = country
+        countrySelected?.selectedMap = false
+        viewModel.removeCountryMap(country, database, email)
     }
 
     override fun removeCountry(country: Country) {}

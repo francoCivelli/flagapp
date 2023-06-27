@@ -3,7 +3,6 @@ package com.example.introduccionkotlin.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.introduccionkotlin.R
@@ -56,6 +55,15 @@ class CountryListAdapter(var countries: ArrayList<Country>, private val isHome: 
                 }
             }
         }
+    }
+
+    fun updateCountry (country: Country){
+        // Obtén la posición del elemento en la lista original (sin filtrar)
+        val position = countries.indexOf(country)
+        // Actualiza los datos del elemento en la lista original
+        countries[position] = country
+        // Notifica al adaptador del cambio en la posición específica
+        notifyItemChanged(position)
     }
 
     fun updateCountries (newCountries: List<Country>){
