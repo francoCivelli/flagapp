@@ -3,6 +3,7 @@ package com.example.introduccionkotlin.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.*
@@ -55,8 +56,19 @@ class MainActivity : AppCompatActivity(), UserDetailFragment.OnRegisterFragmentL
     }
 
     override fun goLogout() {
-        setResult(RESULT_FIRST_USER)
-        finish()
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle(resources.getString(R.string.title_log_out))
+        alertDialogBuilder.setMessage(resources.getString(R.string.message_log_out))
+        alertDialogBuilder.setPositiveButton(resources.getString(R.string.success)) { dialog, _ ->
+            setResult(RESULT_FIRST_USER)
+            finish()
+            dialog.dismiss()
+        }
+        alertDialogBuilder.setNegativeButton(resources.getString(R.string.negative)) { dialog, _ ->
+            dialog.dismiss()
+        }
+        val alertDialog = alertDialogBuilder.create()
+        alertDialog.show()
     }
 
     override fun goDetail(countryName: String) {

@@ -7,6 +7,7 @@
     <string name="menu_home">Home</string>
     <string name="menu_agenda">Agenda</string>
     <string name="menu_user">Usuario</string>
+    <string name="menu_map">Mapa</string>
     <string name="detail">Detalle</string>
     <string name="buscar_empresa">Buscar empresa</string>
 
@@ -26,6 +27,8 @@
     <string name="toolbar_login">Iniciar Sesión</string>
     <string name="btn_login">Ingresar</string>
     <string name="btn_register">Registrarse</string>
+
+    <!-- Snackbar Messages -->
     <string name="sanckbar_uncomplete_credentials">Todos los campos son requeridos</string>
     <string name="sanckbar_error_login">Tuvimos un pronlema, no pudimos iniciar sesión</string>
     <string name="sanckbar_error_user">Tuvimos un pronlema, no pudimos cargar el usuario</string>
@@ -34,6 +37,9 @@
     <string name="sanckbar_password_ok">Fue guardada de forma exitosa tu contraseña</string>
     <string name="sanckbar_password_error">Tuvimos un problema no pudimos cambiar tu contraseña</string>
     <string name="sanckbar_update_country">No pudimos actualizar tu country</string>
+    <string name="sanckbar_data_user_save">Los datos se guardaron correctamente</string>
+    <string name="sanckbar_country_remove">País removido exitosamente</string>
+    <string name="sanckbar_country_remove_error">No pudimos remover el país</string>
 
     <!-- Register -->
     <string name="toolbar_register">Registrate</string>
@@ -57,5 +63,11 @@
     <string name="country_description_title">Descripción</string>
     <string name="input_description_hint">Descripción</string>
 
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyBAgXfakhX-sSdwkJ0WJd59IocSSUZjB3c</string>
 
+    <!-- Cerrar Sesion -->
+    <string name="message_log_out">¿Estás seguro de que deseas cerrar sesión?</string>
+    <string name="title_log_out">Cerrar sesión</string>
+    <string name="success">Si</string>
+    <string name="negative">No</string>
 </resources>

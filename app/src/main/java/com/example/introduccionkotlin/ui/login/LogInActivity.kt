@@ -4,15 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.FileUtils
-import android.view.View
 import android.widget.ProgressBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.fragment.findNavController
 import com.example.introduccionkotlin.R
 import com.example.introduccionkotlin.databinding.ActivityLoginBinding
 import com.example.introduccionkotlin.model.User
@@ -53,10 +50,6 @@ class LogInActivity : AppCompatActivity() , LogInFragment.OnLogInFragmentListene
         // Agregar listener para cambiar el título del Toolbar
         navController.addOnDestinationChangedListener { _, destination, _ ->
             supportActionBar?.title = destination.label
-            if(destination.label == "splash")
-                supportActionBar?.hide()
-            else
-                supportActionBar?.show()
         }
 
         setUpObservers()
@@ -117,6 +110,15 @@ class LogInActivity : AppCompatActivity() , LogInFragment.OnLogInFragmentListene
         if(user != null){
             val intent = Intent(this, MainActivity::class.java)
             startActivityForResult(intent, GO_MAIN_ACTIVITY)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        auth.let{
+            val currentUser = it?.currentUser
+            if(currentUser != null)
+                goMain(currentUser)
         }
     }
 

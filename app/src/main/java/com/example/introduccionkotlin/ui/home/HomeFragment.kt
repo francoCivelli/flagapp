@@ -1,7 +1,6 @@
 package com.example.introduccionkotlin.ui.home
 
 import android.content.Context
-import android.inputmethodservice.Keyboard
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -10,31 +9,48 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.introduccionkotlin.R
 import com.example.introduccionkotlin.adapters.CountryListAdapter
 import com.example.introduccionkotlin.databinding.FragmentHomeBinding
 import com.example.introduccionkotlin.model.Country
+import com.example.introduccionkotlin.ui.login.LogInActivity
+import com.example.introduccionkotlin.util.SearchHelper
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.layout_card_buscador.view.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.google.gson.Gson
 
+@AndroidEntryPoint
 class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
 
-    private val viewModel: ListViewModel by activityViewModels()
+    private val viewModel: ListViewModel by viewModels()
     private val countriesAdapter = CountryListAdapter(arrayListOf(), true, this)
     private lateinit var binding: FragmentHomeBinding
     private lateinit var mListener: OnHomeFragmentListener
     private var countrySelected: Country? = null
     private var countries: ArrayList<Country> = arrayListOf()
 
+    private lateinit var database: FirebaseDatabase
+    private var email: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-        }
+        FirebaseApp.initializeApp(requireContext())
+        database = FirebaseDatabase.getInstance()
+        // Obtener instancia de SharedPreferences
+        val sharedPreferences = requireContext().getSharedPreferences(getString(R.string.prefs_user), Context.MODE_PRIVATE)
+        // Obtener valor de preferencia
+        email = sharedPreferences?.getString(LogInActivity.KEY_EMAIL, "").toString()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -117,7 +133,7 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
 
     private fun mostrarListado ( texto: String,  onClick: Boolean) {
         if (onClick && texto.isNotEmpty()) {
-            val countrieslist = countries.filter { country -> country.countryName!!.contains(texto) }
+            val countrieslist = countries.filter { country -> SearchHelper.removeSpecialCharacters(country.countryName?: "").contains(SearchHelper.removeSpecialCharacters(texto)) }
             countriesAdapter.updateCountries(countrieslist)
         } else if (texto.isEmpty()) {
             countriesAdapter.updateCountries(countries)
@@ -132,10 +148,12 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
                     if(countries.isNullOrEmpty()){
                         binding.listError.text = resources.getString(R.string.empty_list)
                         binding.listError.visibility = View.VISIBLE
-                    } else
+                    } else {
                         binding.listError.visibility = View.GONE
-                    this.countries.addAll(countries)
-                    countriesAdapter.updateCountries(countries)
+                        this.countries.clear()
+                        this.countries.addAll(countries)
+                        checkCountriesScheduled()
+                    }
                 }
                 binding.loadingView.visibility = View.GONE
             }
@@ -144,8 +162,11 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
                     if(it) {
                         countrySelected = null
                         Snackbar.make(binding.root, resources.getString(R.string.country_add_exists), Snackbar.LENGTH_SHORT).show()
-                    } else
+                    } else {
+                        countrySelected = viewModel.generateCountryId(countrySelected)
                         viewModel.addCountry(countrySelected!!)
+                        addCountryMap(countrySelected!!)
+                    }
                 }
 
             }
@@ -184,6 +205,79 @@ class HomeFragment : Fragment(), CountryListAdapter.OnCountryListener {
         // Armo mensaje para el usuario
         countrySelected = country
         viewModel.checkCountryExists(country)
+    }
+
+    private fun checkCountriesScheduled () {
+        val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
+        reference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                for (country in countries) {
+                    val existe = dataSnapshot.children.any {
+                        val countryJson = it.getValue(String::class.java)
+                        val copyCountry = Gson().fromJson(countryJson, Country::class.java)
+                        copyCountry.countryName == country.countryName
+                    }
+                    if(existe)
+                        country.selectedMap = true
+                }
+                countriesAdapter.updateCountries(countries)
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Manejo de errores
+            }
+        })
+    }
+
+    override fun addCountryMap(country: Country) {
+        val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
+        reference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val existe = dataSnapshot.children.any {
+                    val countryJson = it.getValue(String::class.java)
+                    val copyCountry = Gson().fromJson(countryJson, Country::class.java)
+                    copyCountry.countryName == country.countryName
+                }
+                if (!existe) {
+                    val copyCountry = viewModel.generateCountryId(country)
+                    val countryJson = Gson().toJson(copyCountry)
+                    reference.child(copyCountry?.countryName?:"").setValue(countryJson)
+                    countries.find { copyCountry?.countryName == it.countryName }?.selectedMap = true
+                    countriesAdapter.updateCountries(countries)
+                }
+            }
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Manejo de errores
+            }
+        })
+    }
+
+    override fun removeCountryMap(country: Country) {
+        val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
+        val countryCopy = viewModel.generateCountryId(country)
+        if(countryCopy != null) {
+            val query = reference.child(countryCopy.countryName?:"")
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    val countryJson = dataSnapshot.getValue(String::class.java)
+                    val copyCountry = Gson().fromJson(countryJson, Country::class.java)
+                    if (copyCountry != null) {
+                        dataSnapshot.ref.removeValue()
+                            .addOnSuccessListener {
+                                Snackbar.make(binding.root, resources.getString(R.string.sanckbar_country_remove), Snackbar.LENGTH_SHORT).show()
+                                countries.find { country.countryName == it.countryName }?.selectedMap = false
+                                countriesAdapter.updateCountries(countries)
+                            }
+                            .addOnFailureListener {
+                                Snackbar.make(binding.root, resources.getString(R.string.sanckbar_country_remove_error), Snackbar.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Ocurrió un error al realizar la consulta
+                }
+            })
+        }
     }
 
     override fun removeCountry(country: Country) {}

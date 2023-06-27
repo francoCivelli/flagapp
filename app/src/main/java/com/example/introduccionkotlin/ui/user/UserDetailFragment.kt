@@ -51,6 +51,7 @@ class UserDetailFragment : Fragment() {
         with(binding) {
             etMail.isEnabled = false
             if (user != null) {
+                etName.setText(user.name?:"")
                 etMail.setText(user.email ?: "")
                 etPassword.setText(user.password ?: "")
                 etCellphone.setText(user.phone ?: "")
@@ -117,6 +118,8 @@ class UserDetailFragment : Fragment() {
                 model.user.let {
                     if(it == null)
                          Snackbar.make(binding.root, resources.getString(R.string.sanckbar_error_user), Snackbar.LENGTH_SHORT).show()
+                    else
+                        Snackbar.make(binding.root, resources.getString(R.string.sanckbar_data_user_save), Snackbar.LENGTH_SHORT).show()
                     setUpView(it)
                 }
             }
@@ -132,7 +135,7 @@ class UserDetailFragment : Fragment() {
     // Edito fecha de forma individual
     private fun datePickerDialog () {
         val fecha = setSeleccionFecha()
-        val datePickerDialog = DatePickerDialog(requireContext(), R.style.AppTheme_DatePickerDialog, { view, year, month, dayOfMonth ->
+        val datePickerDialog = DatePickerDialog(requireContext(), R.style.MyDatePickerTheme, { view, year, month, dayOfMonth ->
             val fechaElegida = FormaterDate.formatDigitDate(dayOfMonth) + "/" + FormaterDate.formatDigitDate(month + 1) + "/" + year
             binding.etDate.text = fechaElegida
         }, fecha[2].toInt(), fecha[1].toInt() -1, fecha[0].toInt()) // le seteo por defecto la fecha actual

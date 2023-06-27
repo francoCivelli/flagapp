@@ -6,7 +6,6 @@ import com.example.introduccionkotlin.repository.CountriesRepository
 import com.example.introduccionkotlin.ui.home.ListViewModel
 import io.reactivex.Scheduler
 import io.reactivex.Single
-import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.disposables.Disposable
 import io.reactivex.internal.schedulers.ExecutorScheduler
 import io.reactivex.plugins.RxJavaPlugins
@@ -39,7 +38,7 @@ class ListViewModelTest {
 
     @Test
     fun getCountriesSuccess() {
-        val country = Country("countryName", "capital", "url")
+        val country = Country("", "", "", "", 0, "", ArrayList(),"", false)
         val countriesList: ArrayList<Country> = arrayListOf(country)
         testSingle = Single.just(countriesList)
        // `when`(repository.getCountries()).thenReturn(testSingle)
@@ -67,13 +66,12 @@ class ListViewModelTest {
                 return super.scheduleDirect(run, 0, unit)
             }
             override fun createWorker() : Worker {
-                return ExecutorScheduler.ExecutorWorker(Executor { it.run() }, false)
+                return ExecutorScheduler.ExecutorWorker(Executor { it.run() })
             }
         }
         RxJavaPlugins.setInitIoSchedulerHandler { scheduler -> immediate }
         RxJavaPlugins.setInitComputationSchedulerHandler { scheduler -> immediate }
         RxJavaPlugins.setInitNewThreadSchedulerHandler { scheduler -> immediate }
         RxJavaPlugins.setInitSingleSchedulerHandler { scheduler -> immediate }
-        RxAndroidPlugins.setInitMainThreadSchedulerHandler { scheduler -> immediate }
     }
 }

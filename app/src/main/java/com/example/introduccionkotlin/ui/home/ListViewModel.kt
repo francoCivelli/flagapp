@@ -88,12 +88,16 @@ class ListViewModel @Inject constructor(private val repository: CountriesReposit
         }
     }
 
+    fun generateCountryId (country: Country?) : Country? {
+        if(country?.id.isNullOrEmpty())
+            country?.id = UUID.randomUUID().toString()
+        return country
+    }
+
     // Agrego pais a la lista de la base de datos
     fun addCountry (country: Country) {
         viewModelScope.launch {
             try {
-                if(country.id.isNullOrEmpty())
-                    country.id = UUID.randomUUID().toString()
                 repository.insert(country)
                 _countriesState.value = CountryUIState.Add
             } catch (e: SQLException){

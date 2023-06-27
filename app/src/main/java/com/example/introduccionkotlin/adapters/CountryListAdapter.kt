@@ -1,7 +1,9 @@
 package com.example.introduccionkotlin.adapters
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.introduccionkotlin.R
@@ -33,12 +35,20 @@ class CountryListAdapter(var countries: ArrayList<Country>, private val isHome: 
                 data.setOnClickListener{
                     listener.countrySelected(country)
                 }
+                actionMap.setImageDrawable(ResourcesCompat.getDrawable(binding.root.resources, if(country.selectedMap) R.drawable.ic_map_selected else R.drawable.ic_map, root.context.theme))
                 if(isHome){
                     action.setImageDrawable(ResourcesCompat.getDrawable(binding.root.resources, R.drawable.ic_add_country, root.context.theme))
-                    action.setOnClickListener{
+                    action.setOnClickListener {
                         listener.addCountry(country)
                     }
+                    actionMap.setOnClickListener {
+                        if(country.selectedMap)
+                            listener.removeCountryMap(country)
+                        else
+                            listener.addCountryMap(country)
+                    }
                 } else {
+                    actionMap.visibility = View.GONE
                     action.setImageDrawable(ResourcesCompat.getDrawable(binding.root.resources, R.drawable.ic_erase_country, root.context.theme))
                     action.setOnClickListener{
                         listener.removeCountry(country)
@@ -57,6 +67,8 @@ class CountryListAdapter(var countries: ArrayList<Country>, private val isHome: 
     interface OnCountryListener {
         fun countrySelected(country: Country)
         fun addCountry(country: Country)
+        fun addCountryMap(country: Country)
+        fun removeCountryMap(country: Country)
         fun removeCountry(country: Country)
     }
 

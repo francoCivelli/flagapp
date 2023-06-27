@@ -3,17 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_login_graph"
-    app:startDestination="@id/splashScreenFragment">
+    app:startDestination="@id/logInFragment">
 
-    <fragment
-        android:id="@+id/splashScreenFragment"
-        android:name="com.example.introduccionkotlin.ui.login.SplashScreenFragment"
-        android:label="splash"
-        tools:layout="@layout/fragment_splash_screen">
-        <action
-            android:id="@+id/action_splashScreenFragment_to_logInFragment"
-            app:destination="@id/logInFragment" />
-    </fragment>
     <fragment
         android:id="@+id/logInFragment"
         android:name="com.example.introduccionkotlin.ui.login.LogInFragment"

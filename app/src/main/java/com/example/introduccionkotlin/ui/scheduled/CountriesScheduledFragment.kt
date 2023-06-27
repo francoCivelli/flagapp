@@ -8,14 +8,21 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.introduccionkotlin.R
 import com.example.introduccionkotlin.adapters.CountryListAdapter
 import com.example.introduccionkotlin.databinding.FragmentCountriesListSchedulesBinding
 import com.example.introduccionkotlin.model.Country
 import com.example.introduccionkotlin.ui.home.ListViewModel
+import com.example.introduccionkotlin.ui.login.LogInActivity
+import com.example.introduccionkotlin.util.SearchHelper
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -29,10 +36,17 @@ class CountriesScheduledFragment : Fragment(), CountryListAdapter.OnCountryListe
     private val viewModel: ListViewModel by viewModels()
     private var deleted: Country? = null
 
+    private lateinit var database: FirebaseDatabase
+    private var email: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-        }
+        FirebaseApp.initializeApp(requireContext())
+        database = FirebaseDatabase.getInstance()
+        // Obtener instancia de SharedPreferences
+        val sharedPreferences = requireContext().getSharedPreferences(getString(R.string.prefs_user), Context.MODE_PRIVATE)
+        // Obtener valor de preferencia
+        email = sharedPreferences?.getString(LogInActivity.KEY_EMAIL, "").toString()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -77,6 +91,7 @@ class CountriesScheduledFragment : Fragment(), CountryListAdapter.OnCountryListe
             }
             is ListViewModel.CountryUIState.Delete -> {
                 viewModel.fetchDatabaseCountries()
+                removeCountryMap(deleted!!)
                 deleted = null
             }
             is ListViewModel.CountryUIState.Error -> {
@@ -108,6 +123,33 @@ class CountriesScheduledFragment : Fragment(), CountryListAdapter.OnCountryListe
     }
 
     override fun addCountry(country: Country) {}
+    override fun addCountryMap(country: Country) {}
+
+    override fun removeCountryMap(country: Country) {
+        val reference = database.getReference("/").child(SearchHelper.removeSpecialCharacters(email)).child("countries")
+        val countryCopy = viewModel.generateCountryId(country)
+        if(countryCopy != null) {
+            val query = reference.child(countryCopy.countryName?:"")
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    val countryJson = dataSnapshot.getValue(String::class.java)
+                    val copyCountry = Gson().fromJson(countryJson, Country::class.java)
+                    if (copyCountry != null) {
+                        dataSnapshot.ref.removeValue()
+                            .addOnSuccessListener {
+                                Snackbar.make(binding.root, resources.getString(R.string.sanckbar_country_remove), Snackbar.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener {
+                                Snackbar.make(binding.root, resources.getString(R.string.sanckbar_country_remove_error), Snackbar.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Ocurrió un error al realizar la consulta
+                }
+            })
+        }
+    }
 
     override fun removeCountry(country: Country) {
         deleted = country

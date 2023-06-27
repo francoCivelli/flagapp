@@ -24,4 +24,11 @@
         tools:layout="@layout/fragment_user_detail" >
     </fragment>
 
+    <fragment
+        android:id="@+id/countryMapFragment"
+        android:name="com.example.introduccionkotlin.ui.map.CountryMapFragment"
+        android:label="@string/menu_map"
+        tools:layout="@layout/fragment_country_map">
+    </fragment>
+
 </navigation>

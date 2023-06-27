@@ -95,7 +95,7 @@ class RegisterFragment : Fragment() {
     // Edito fecha de forma individual
     private fun datePickerDialog () {
         val fecha = setSeleccionFecha()
-        val datePickerDialog = DatePickerDialog(requireContext(), R.style.AppTheme_DatePickerDialog, { view, year, month, dayOfMonth ->
+        val datePickerDialog = DatePickerDialog(requireContext(), R.style.MyDatePickerTheme, { view, year, month, dayOfMonth ->
             val fechaElegida = FormaterDate.formatDigitDate(dayOfMonth) + "/" + FormaterDate.formatDigitDate(month + 1) + "/" + year
             binding.etDate.text = fechaElegida
         }, fecha[2].toInt(), fecha[1].toInt() -1, fecha[0].toInt()) // le seteo por defecto la fecha actual

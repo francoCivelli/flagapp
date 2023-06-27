@@ -15,7 +15,6 @@ class LogInFragment : Fragment() {
 
     private lateinit var binding: FragmentLoginBinding
     private lateinit var mListener: OnLogInFragmentListener
-    private var auth: FirebaseAuth? = FirebaseAuth.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,15 +43,6 @@ class LogInFragment : Fragment() {
         }
 
         return binding.root
-    }
-
-    override fun onStart() {
-        super.onStart()
-        auth.let{
-            val currentUser = it?.currentUser
-            if(currentUser != null)
-                mListener.goMain(currentUser)
-        }
     }
 
     interface OnLogInFragmentListener {
